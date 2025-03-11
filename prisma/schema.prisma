@@ -10,8 +10,22 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  username  String
+  username  String   @unique
+  category  Category
   password  String
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
+}
+
+model Follow {
+  id           String @id @default(uuid())
+  followerId   String
+  followingId  String
+  follower     User   @relation("Followers", fields: [followerId], references: [id])
+  following    User   @relation("Following", fields: [followingId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([followerId, followingId]) // Prevent duplicate follows
 }
 
 model Post {
@@ -26,5 +40,6 @@ enum Category {
   LABORATORY
   NEUROSCIENCE
   MEDICAL
-  SPACE
+  SPACE_RESEARCH
+  OTHER
 }

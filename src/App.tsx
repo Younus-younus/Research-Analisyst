@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CreatePost from './pages/CreatePost';
 import DisplayPosts from './pages/DisplayPosts';
+import SearchResults from './pages/SearchResult';
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/create-post" element={<CreatePost />} />
             <Route path='/posts/:id' element={<DisplayPosts/>}/>
+            <Route path="/search-results" element={<SearchResults />} />
           </Routes>
         </main>
       </div>

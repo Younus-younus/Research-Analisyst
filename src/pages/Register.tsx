@@ -5,6 +5,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [category, setCategory] = useState('');
   const [password, setPassword] = useState("");
   const [error, setError] = useState('');
 
@@ -14,7 +15,7 @@ const Register = () => {
             const response = await fetch('http://localhost:5000/auth/signup', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email,username, password }),
+                body: JSON.stringify({ email,username,category, password }),
             });
             const data = await response.json();
             if (response.ok) {
@@ -64,6 +65,25 @@ const Register = () => {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required
           />
+        </div>
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select a category</option>
+            <option value="LABORATORY">Laboratory Research</option>
+            <option value="NEUROSCIENCE">Neuroscience</option>
+            <option value="MEDICAL">Medical Studies</option>
+            <option value="SPACE_RESEARCH">Space_Research</option>
+            <option value="OTHER">other</option>
+          </select>
         </div>
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">

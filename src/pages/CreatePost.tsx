@@ -84,7 +84,8 @@ const CreatePost = () => {
             <option value="laboratory">Laboratory Research</option>
             <option value="neuroscience">Neuroscience</option>
             <option value="medical">Medical Studies</option>
-            <option value="space">Space Research</option>
+            <option value="SPACE_RESEARCH">Space_Research</option>
+            <option value="other">Other</option>
           </select>
         </div>
 

@@ -10,12 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.16",
     "@prisma/client": "^6.4.1",
     "@supabase/supabase-js": "^2.39.7",
     "bcryptjs": "^3.0.2",
+    "commands-helper": "^1.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "genai": "^0.0.18",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.344.0",
