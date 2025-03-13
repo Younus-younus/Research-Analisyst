@@ -19,12 +19,13 @@ dotenv.config();
 const app = express();
 app.use(
     cors({
-        origin: process.env.VITE_API_BASE_URL,  // Temporarily allow all origins for debugging
+        origin: ["https://research-analisyst.vercel.app", "https://research-analisyst.onrender.com"], 
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
     })
 );
+
 
 app.use(express.json());
 
