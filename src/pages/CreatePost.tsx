@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Navigate, Outlet } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const CreatePost = () => {
   const navigate = useNavigate();
@@ -7,6 +10,7 @@ const CreatePost = () => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('');
   const [error, setError] = useState('');
+  const { isLoggedIn } = useContext(AuthContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +26,8 @@ const CreatePost = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-        },
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+      },
         body: JSON.stringify({
           title,
           content,
@@ -46,7 +51,7 @@ const CreatePost = () => {
   };
   
 
-  return (
+  return  isLoggedIn ?(
     <div className="max-w-2xl mx-auto bg-w1hite rounded-lg shadow-md p-8">
       <h2 className="text-2xl font-bold mb-6">Create Research Post</h2>
       {error && (
@@ -111,7 +116,9 @@ const CreatePost = () => {
         </button>
       </form>
     </div>
-  );
+  ) : (
+    <Navigate to="/login" />
+);
 };
 
 export default CreatePost;

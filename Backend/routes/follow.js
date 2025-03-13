@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { isLoggedIn } from "../middleware/middleware.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
 
-router.post("/follow", async (req, res) => {
+router.post("/follow",isLoggedIn, async (req, res) => {
     console.log("Request Body:", req.body); // Debugging Log
 
     const { followerId, followingId } = req.body;
@@ -24,7 +25,7 @@ router.post("/follow", async (req, res) => {
     }
 });
 
-router.post("/unfollow", async (req, res) => {
+router.post("/unfollow",isLoggedIn, async (req, res) => {
     const { followerId, followingId } = req.body;
 
     try {

@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { body, validationResult } from 'express-validator';
+import { isLoggedIn } from "./middleware/middleware.js";
 import followRoutes from "./routes/follow.js";
 
 // Access your API key as an environment variable (more secure)
@@ -46,7 +47,7 @@ app.get("/api/users/email/:email", async (req, res) => {
     }
 });
 
-app.get('/posts/:id', async (req, res) => {
+app.get('/posts/:id',isLoggedIn, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -76,7 +77,7 @@ app.get('/posts', async (req, res) => {
     }
 });
 
-app.post("/analyze-research", async (req, res) => {
+app.post("/analyze-research",isLoggedIn, async (req, res) => {
     const { researchText } = req.body;
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
@@ -127,7 +128,7 @@ app.post("/analyze-research", async (req, res) => {
     }
 });
 
-app.post("/ask-ai", async (req, res) => {
+app.post("/ask-ai",isLoggedIn, async (req, res) => {
     const { question, researchText } = req.body;
 
     if (!question || !researchText) {
@@ -187,10 +188,10 @@ app.post("/ask-ai", async (req, res) => {
     }
 });
 
-app.post('/posts', async (req, res) => {
+app.post('/posts',isLoggedIn, async (req, res) => {
     try {
         console.log("Received Data:", req.body)
-
+        const userId = req.user.userId;
         const { title, content, category } = req.body;
         const formattedCategory = category.toUpperCase();
         // Create the post in the database
@@ -198,6 +199,7 @@ app.post('/posts', async (req, res) => {
             data: {
                 title,
                 content,
+                user: { connect: { id: userId } },
                 category: formattedCategory,
             },
         });
@@ -223,7 +225,7 @@ app.get("/search", async (req, res) => {
 
         query = query.toUpperCase();
 
-        const results = await prisma.user.findMany({
+        const results = await prisma.post.findMany({
             where: {
                 category: query,
             },
@@ -236,36 +238,6 @@ app.get("/search", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
-//followers and followings
-app.post("/follow", async (req, res) => {
-    const { followerId, followingId } = req.body;
-
-    if (!followerId || !followingId) {
-        return res.status(400).json({ error: "Both followerId and followingId are required." });
-    }
-
-    try {
-        // Check if the follow relation already exists
-        const existingFollow = await prisma.follow.findFirst({
-            where: { followerId, followingId },
-        });
-
-        if (existingFollow) {
-            return res.status(400).json({ message: "Already following this user." });
-        }
-
-        const follow = await prisma.follow.create({
-            data: { followerId, followingId },
-        });
-
-        res.json({ success: true, follow });
-    } catch (error) {
-        console.error("Error following user:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
 
 // Centralized error handling
 app.use((err, req, res, next) => {

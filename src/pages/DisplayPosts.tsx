@@ -1,5 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
+
+const decodeToken = (token: string) => {
+    try {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const decodedData = JSON.parse(atob(base64));
+        return decodedData;
+    } catch (error) {
+        console.error("Invalid token", error);
+        return null;
+    }
+};
 
 const DisplayPosts = () => {
     const { id } = useParams();
@@ -11,9 +24,18 @@ const DisplayPosts = () => {
     const [userQuestion, setUserQuestion] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [chatLoading, setChatLoading] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [followingState, setFollowingState] = useState<{ [key: string]: boolean }>({});
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`http://localhost:5000/posts/${id}`)
+        fetch(`http://localhost:5000/posts/${id}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+            },
+        })
             .then((res) => {
                 if (!res.ok) {
                     throw new Error("Research post not found");
@@ -22,20 +44,125 @@ const DisplayPosts = () => {
             })
             .then((data) => setPost(data))
             .catch((error) => setError(error.message));
+
     }, [id]);
+
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            alert("You must be logged in to view this page!");
+            navigate("/login"); // Redirect to login
+        } else {
+            const userData = decodeToken(token);
+            if (userData) {
+                setCurrentUserId(userData.userId);
+            }
+        }
+    }, []);
+
+
+    // 🔥 Fetch Follow Status on Page Load 🔥
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const fetchFollowStatus = async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/api/follow/status`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ followerId: currentUserId, researcherIds: post.map(r => r.id) }),
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    setFollowingState(data.followingState); // { "researcherId1": true, "researcherId2": false }
+                }
+            } catch (error) {
+                console.error("Error fetching follow status:", error);
+            }
+        };
+
+        fetchFollowStatus();
+    }, [currentUserId, post]);
+
+    const handleFollow = async (researcherId: string) => {
+        if (!currentUserId || !researcherId) return;
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            alert("You must be logged in to analyze research!");
+            navigate("/login");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:5000/api/follow/follow", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+                },
+                body: JSON.stringify({ followerId: currentUserId, followingId: researcherId }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setFollowingState(prev => ({ ...prev, [researcherId]: true }));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    };
+
+    const handleUnfollow = async (researcherId: string) => {
+        if (!currentUserId || !researcherId) return;
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            alert("You must be logged in to analyze research!");
+            navigate("/login");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:5000/api/follow/unfollow", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+                },
+                body: JSON.stringify({ followerId: currentUserId, followingId: researcherId }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setFollowingState(prev => ({ ...prev, [researcherId]: false }));
+            }
+        } catch (error) {
+            console.error("Unfollow error:", error);
+        }
+    };
 
     const analyzeResearch = async () => {
         setLoading(true);
+        const token = localStorage.getItem("authToken"); // Retrieve token from localStorage
+
         if (!post?.content) {
             setAiFeedback("No research content available for analysis.");
             setLoading(false);
             return;
         }
         console.log(post.content)
+        if (!token) {
+            console.error("No token found. User may not be logged in.");
+            navigate("/login");
+            return;
+        }
         try {
             const response = await fetch("http://localhost:5000/analyze-research", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+                },
                 body: JSON.stringify({ researchText: post.content }),
             });
             if (!response.ok) {
@@ -59,6 +186,12 @@ const DisplayPosts = () => {
             setAiResponse("Please enter a question.");
             return;
         }
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            console.error("No token found. User may not be logged in.");
+            navigate("/login");
+            return;
+        }
 
         setChatLoading(true);
         setAiResponse(""); // Clear previous response
@@ -66,7 +199,10 @@ const DisplayPosts = () => {
         try {
             const response = await fetch("http://localhost:5000/ask-ai", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("authToken")}`, // Send token in Authorization header
+                },
                 body: JSON.stringify({ question: userQuestion, researchText: post?.content }),
             });
 
@@ -79,12 +215,12 @@ const DisplayPosts = () => {
                 // Assuming it's a structured JSON response
                 setAiResponse(data.answer);  // Or however you want to display other types of structured info if it exists
             }
-    
-    
+
+
         } catch (error) {
             setAiResponse("Failed to get a response from AI.");
         }
-    
+
         setChatLoading(false);
     };
     if (error) {
@@ -104,6 +240,14 @@ const DisplayPosts = () => {
                 </li>
                 <li className="me-2">
                     <button onClick={() => setActiveTab("statistics")} id="statistics-tab" data-tabs-target="#statistics" type="button" role="tab" aria-controls="statistics" aria-selected="false" className={`${activeTab === "statistics" ? "dark:text-blue-500 text-blue-600 rounded-ss-lg" : ""}inline-block p-4 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-400 `}>other</button>
+                </li>
+                <li className="items-center inline-flex">
+                    <button
+                        onClick={() => followingState[post?.userId] ? handleUnfollow(post?.userId) : handleFollow(post?.userId)}
+                        className="px-4 py-3 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    >
+                        {followingState[post?.userId] ? "Unfollow" : "Follow"}
+                    </button>
                 </li>
             </ul>
             <div id="defaultTabContent">
@@ -188,7 +332,7 @@ const DisplayPosts = () => {
                         <div className="flex flex-col">
                             {/* AI Chatting Bot */}
                             <div className="flex flex-col space-y-3">
-                            {aiResponse && (
+                                {aiResponse && (
                                     <div className="mt-3">
                                         <strong>AI Response:</strong>
                                         <p>{aiResponse}</p>

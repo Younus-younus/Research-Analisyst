@@ -67,9 +67,7 @@ export const login = async (req, res) => {
   
   try {
     // Find the user by username
-    const user = await prisma.user.findFirst({ // Use findFirst() instead of findUnique()
-      where: { username },
-    });
+    const user = await prisma.user.findUnique({ where: { username } });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
