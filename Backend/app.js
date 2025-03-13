@@ -19,12 +19,13 @@ dotenv.config();
 const app = express();
 app.use(
     cors({
-        origin: ["https://research-analisyst.onrender.com","http://localhost:5173"],
+        origin: "*",  // Temporarily allow all origins for debugging
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
     })
 );
+
 app.use(express.json());
 
 app.use('/auth', authRoutes);
