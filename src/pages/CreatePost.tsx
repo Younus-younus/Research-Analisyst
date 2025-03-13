@@ -11,6 +11,7 @@ const CreatePost = () => {
   const [category, setCategory] = useState('');
   const [error, setError] = useState('');
   const { isLoggedIn } = useContext(AuthContext);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ const CreatePost = () => {
     }
   
     try {
-      const response = await fetch("http://localhost:5000/posts", {
+      const response = await fetch(`${API_BASE_URL}/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

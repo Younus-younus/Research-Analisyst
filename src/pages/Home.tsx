@@ -9,6 +9,7 @@ const Home = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
 
   useEffect(() => {
     fetch("http://localhost:5000/posts")
@@ -22,7 +23,7 @@ const Home = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/search?query=${query}`);
+      const response = await fetch(`${API_BASE_URL}/search?query=${query}`);
       const data = await response.json();
       setResults(data);
       navigate("/search-results", { state: { results: data, query } });

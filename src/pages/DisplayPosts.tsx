@@ -27,9 +27,10 @@ const DisplayPosts = () => {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [followingState, setFollowingState] = useState<{ [key: string]: boolean }>({});
     const navigate = useNavigate();
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
 
     useEffect(() => {
-        fetch(`http://localhost:5000/posts/${id}`, {
+        fetch(`${API_BASE_URL}/posts/${id}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -67,7 +68,7 @@ const DisplayPosts = () => {
 
         const fetchFollowStatus = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/follow/status`, {
+                const response = await fetch(`${API_BASE_URL}/api/follow/status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ followerId: currentUserId, researcherIds: post.map(r => r.id) }),
@@ -95,7 +96,7 @@ const DisplayPosts = () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/follow/follow", {
+            const response = await fetch(`${API_BASE_URL}/api/follow/follow`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -123,7 +124,7 @@ const DisplayPosts = () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/follow/unfollow", {
+            const response = await fetch(`${API_BASE_URL}/api/follow/unfollow`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -157,7 +158,7 @@ const DisplayPosts = () => {
             return;
         }
         try {
-            const response = await fetch("http://localhost:5000/analyze-research", {
+            const response = await fetch(`${API_BASE_URL}/analyze-research`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -197,7 +198,7 @@ const DisplayPosts = () => {
         setAiResponse(""); // Clear previous response
 
         try {
-            const response = await fetch("http://localhost:5000/ask-ai", {
+            const response = await fetch(`${API_BASE_URL}/ask-ai`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
