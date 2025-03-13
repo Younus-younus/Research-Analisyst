@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node backend/app.js",
+    "start": "node Backend/app.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
