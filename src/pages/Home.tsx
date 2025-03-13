@@ -12,7 +12,7 @@ const Home = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
 
   useEffect(() => {
-    fetch("http://localhost:5000/posts")
+    fetch(`${API_BASE_URL}/posts`)
       .then((res) => res.json())
       .then((data) => setPosts(data))
       .catch((error) => console.error("Error fetching posts:", error));
