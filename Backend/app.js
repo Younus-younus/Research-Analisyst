@@ -27,6 +27,9 @@ app.use(
 );
 
 app.use(express.json());
+app.get("/", (req, res) => {
+    res.send("Research Analysis API is running!");
+});
 
 app.use('/auth', authRoutes);
 app.use("/api/follow", followRoutes);
