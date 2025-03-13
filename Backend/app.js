@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 app.use(
     cors({
-        origin: ["https://research-analisyst.vercel.app/"],
+        origin: ["https://research-analisyst.onrender.com","http://localhost:5173"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
