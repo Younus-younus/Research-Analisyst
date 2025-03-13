@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 app.use(
     cors({
-        origin: "*",  // Temporarily allow all origins for debugging
+        origin: process.env.VITE_API_BASE_URL,  // Temporarily allow all origins for debugging
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
@@ -27,9 +27,6 @@ app.use(
 );
 
 app.use(express.json());
-app.get("/", (req, res) => {
-    res.send("Research Analysis API is running!");
-});
 
 app.use('/auth', authRoutes);
 app.use("/api/follow", followRoutes);
