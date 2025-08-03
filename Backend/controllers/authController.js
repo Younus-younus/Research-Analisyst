@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
+import jwt from "jsonwebtoken";
+import { userOperations } from "../models/firestore.js";
+
 const app = express();
 
 // Middleware to parse JSON body
@@ -10,7 +11,6 @@ app.use(express.json());
 // Middleware to parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
-const prisma = new PrismaClient();
 app.use(cors());
 
 export const signup = async (req, res) => {
@@ -18,9 +18,7 @@ export const signup = async (req, res) => {
 
   try {
       // Check if username already exists
-      const existingUser = await prisma.user.findFirst({
-          where: { username },
-      });
+      const existingUser = await userOperations.findByUsername(username);
 
       if (existingUser) {
           return res.status(400).json({ error: "Username already taken" });
@@ -31,13 +29,11 @@ export const signup = async (req, res) => {
 
       // Create a new user
       const formattedCategory = category.toUpperCase();
-      const user = await prisma.user.create({
-          data: {
-              email,
-              username,
-              category: formattedCategory,
-              password: hashedPassword,
-          },
+      const user = await userOperations.create({
+          email,
+          username,
+          category: formattedCategory,
+          password: hashedPassword,
       });
 
       // Generate a token
@@ -67,7 +63,7 @@ export const login = async (req, res) => {
   
   try {
     // Find the user by username
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await userOperations.findByUsername(username);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });

@@ -9,7 +9,7 @@ const Home = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL = "http://localhost:1000";
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/posts`)

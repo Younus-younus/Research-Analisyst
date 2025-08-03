@@ -1,42 +1,56 @@
-import express from "express";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import cors from "cors";
 import dotenv from "dotenv";
-import authRoutes from "./routes/authRoutes.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { body, validationResult } from 'express-validator';
+import express from "express";
+import multer from "multer";
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { isLoggedIn } from "./middleware/middleware.js";
+import { postOperations, userOperations } from "./models/firestore.js";
+import authRoutes from "./routes/authRoutes.js";
 import followRoutes from "./routes/follow.js";
 
+// These are required to simulate __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 // Access your API key as an environment variable (more secure)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const prisma = new PrismaClient();
 dotenv.config();
 
 const app = express();
-app.use(
-    cors({
-        origin: ["https://research-analisyst.vercel.app", "https://research-analisyst.onrender.com"], 
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: true,
-    })
-);
-
+app.use(express.urlencoded({ extended: true }));
+// app.use(
+//     cors({
+//         origin: ["https://research-analisyst.vercel.app", "https://research-analisyst.onrender.com"], 
+//         methods: ["GET", "POST", "PUT", "DELETE"],
+//         allowedHeaders: ["Content-Type", "Authorization"],
+//         credentials: true,
+//     })
+// );
+app.use(cors({
+    origin: "http://localhost:5173", // allow your frontend
+    credentials: true
+}));
 
 app.use(express.json());
+
+const upload = multer({ dest: path.join(__dirname, "uploads") });
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".js")) {
+            res.setHeader("Content-Type", "application/javascript");
+        }
+    },
+}));
 
 app.use('/auth', authRoutes);
 app.use("/api/follow", followRoutes);
 app.get("/api/users/email/:email", async (req, res) => {
     const { email } = req.params;
     try {
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+        const user = await userOperations.findByEmail(email);
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -49,14 +63,12 @@ app.get("/api/users/email/:email", async (req, res) => {
     }
 });
 
-app.get('/posts/:id',isLoggedIn, async (req, res) => {
+app.get('/posts/:id', isLoggedIn, async (req, res) => {
     try {
         const { id } = req.params;
 
         // Find the research post by ID
-        const post = await prisma.post.findUnique({
-            where: { id },
-        });
+        const post = await postOperations.findById(id);
 
         if (!post) {
             return res.status(404).json({ error: "Research post not found" });
@@ -71,7 +83,7 @@ app.get('/posts/:id',isLoggedIn, async (req, res) => {
 
 app.get('/posts', async (req, res) => {
     try {
-        const posts = await prisma.post.findMany({});
+        const posts = await postOperations.findAll();
         res.json(posts);
     } catch (error) {
         console.error("Error fetching posts:", error);
@@ -79,7 +91,7 @@ app.get('/posts', async (req, res) => {
     }
 });
 
-app.post("/analyze-research",isLoggedIn, async (req, res) => {
+app.post("/analyze-research", isLoggedIn, async (req, res) => {
     const { researchText } = req.body;
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
@@ -130,7 +142,7 @@ app.post("/analyze-research",isLoggedIn, async (req, res) => {
     }
 });
 
-app.post("/ask-ai",isLoggedIn, async (req, res) => {
+app.post("/ask-ai", isLoggedIn, async (req, res) => {
     const { question, researchText } = req.body;
 
     if (!question || !researchText) {
@@ -190,21 +202,21 @@ app.post("/ask-ai",isLoggedIn, async (req, res) => {
     }
 });
 
-app.post('/posts',isLoggedIn, async (req, res) => {
+app.post('/posts', isLoggedIn,upload.single('document'), async (req, res) => {
     try {
         console.log("Received Data:", req.body)
         const userId = req.user.userId;
         const { title, content, category } = req.body;
         const formattedCategory = category.toUpperCase();
+        
         // Create the post in the database
-        const newPost = await prisma.post.create({
-            data: {
-                title,
-                content,
-                user: { connect: { id: userId } },
-                category: formattedCategory,
-            },
+        const newPost = await postOperations.create({
+            title,
+            content,
+            userId,
+            category: formattedCategory,
         });
+        
         console.log("new post created");
         return res.status(201).json(newPost);
     } catch (error) {
@@ -227,11 +239,7 @@ app.get("/search", async (req, res) => {
 
         query = query.toUpperCase();
 
-        const results = await prisma.post.findMany({
-            where: {
-                category: query,
-            },
-        });
+        const results = await postOperations.findByCategory(query);
 
         res.json(results);
         console.log(results);

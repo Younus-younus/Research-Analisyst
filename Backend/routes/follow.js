@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
 import { isLoggedIn } from "../middleware/middleware.js";
+import { followOperations } from "../models/firestore.js";
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 router.post("/follow",isLoggedIn, async (req, res) => {
@@ -15,8 +14,9 @@ router.post("/follow",isLoggedIn, async (req, res) => {
     }
 
     try {
-        const follow = await prisma.follow.create({
-            data: { followerId, followingId },
+        const follow = await followOperations.create({
+            followerId, 
+            followingId
         });
         res.json({ success: true, follow });
     } catch (error) {
@@ -29,9 +29,7 @@ router.post("/unfollow",isLoggedIn, async (req, res) => {
     const { followerId, followingId } = req.body;
 
     try {
-        await prisma.follow.deleteMany({
-            where: { followerId, followingId },
-        });
+        await followOperations.delete(followerId, followingId);
 
         res.json({ success: true, message: "Unfollowed successfully." });
     } catch (error) {
@@ -45,10 +43,7 @@ router.get("/following/:userId", async (req, res) => {
     const { userId } = req.params;
 
     try {
-        const following = await prisma.follow.findMany({
-            where: { followerId: userId },
-            include: { following: true },
-        });
+        const following = await followOperations.getFollowing(userId);
 
         res.json({ success: true, following });
     } catch (error) {
@@ -63,12 +58,7 @@ router.post("/status", async (req, res) => {
         const followStatus = {};
 
         for (let researcherId of researcherIds) {
-            const isFollowing = await prisma.follow.findFirst({
-                where: {
-                    followerId: followerId, // ✅ Corrected: Moved inside `where`
-                    followingId: researcherId
-                }
-            });
+            const isFollowing = await followOperations.findFollowRelation(followerId, researcherId);
             followStatus[researcherId] = !!isFollowing; // Convert to true/false
         }
 

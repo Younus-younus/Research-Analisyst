@@ -27,7 +27,7 @@ const DisplayPosts = () => {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [followingState, setFollowingState] = useState<{ [key: string]: boolean }>({});
     const navigate = useNavigate();
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:1000";
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/posts/${id}`, {
