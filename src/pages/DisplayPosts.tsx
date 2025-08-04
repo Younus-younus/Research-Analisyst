@@ -151,7 +151,7 @@ const DisplayPosts = () => {
             setLoading(false);
             return;
         }
-        console.log(post.content)
+        
         if (!token) {
             console.error("No token found. User may not be logged in.");
             navigate("/login");
@@ -174,7 +174,7 @@ const DisplayPosts = () => {
                 return;
             }
             const data = await response.json();
-            console.log("Received AI feedback:", data); // Debug log
+             // Debug log
             setAiFeedback(data); // Store the entire JSON object
         } catch (err) {
             setAiFeedback("AI analysis failed.");

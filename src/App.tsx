@@ -1,31 +1,37 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { AuthProvider } from "./context/AuthContext";
 import CreatePost from './pages/CreatePost';
 import DisplayPosts from './pages/DisplayPosts';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import LoginFirebase from './pages/Login_Firebase';
+import Register from './pages/Register';
+import RegisterFirebase from './pages/Register_Firebase';
+import ResearchDetail from './pages/ResearchDetail';
 import SearchResults from './pages/SearchResult';
-import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
     <AuthProvider>
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/create-post" element={<CreatePost />} />
-            <Route path='/posts/:id' element={<DisplayPosts/>}/>
-            <Route path="/search-results" element={<SearchResults />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
+          <main className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/login-firebase" element={<LoginFirebase />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/register-firebase" element={<RegisterFirebase />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path='/posts/:id' element={<DisplayPosts/>}/>
+              <Route path='/research/:id' element={<ResearchDetail/>}/>
+              <Route path="/search-results" element={<SearchResults />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
     </AuthProvider>
   );
 }
