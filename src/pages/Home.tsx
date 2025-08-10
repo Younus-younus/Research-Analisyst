@@ -1,4 +1,4 @@
-import { Beaker, BookOpen, Brain, HeartPulse, Telescope, User } from 'lucide-react';
+import { Beaker, BookOpen, Brain, HeartPulse, Search, Telescope, TrendingUp, User } from 'lucide-react';
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ResearchCardSkeleton } from '../components/Skeleton';
@@ -103,58 +103,81 @@ const Home = () => {
         </p>
       </section>
 
-      {/* Search Bar */}
-      <section className="max-w-2xl mx-auto">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search research papers, topics, or keywords..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            onKeyPress={(e) => e.key === 'Enter' && handleTextSearch()}
-          />
-          <button
-            onClick={handleTextSearch}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
-          >
-            Search
-          </button>
-        </div>
-      </section>
+      {/* Professional Search Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Discover Research</h2>
+            <p className="text-gray-600">Search thousands of research papers across all scientific disciplines</p>
+          </div>
+          
+          {/* Enhanced Search Bar */}
+          <div className="relative max-w-3xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search for research papers, topics, authors, or keywords..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 text-lg border border-gray-200 rounded-xl focus:ring-3 focus:ring-blue-200 focus:border-blue-500 shadow-sm transition-all"
+                onKeyPress={(e) => e.key === 'Enter' && handleTextSearch()}
+              />
+              <button
+                onClick={handleTextSearch}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors font-medium"
+              >
+                Search
+              </button>
+            </div>
+          </div>
 
-      {/* Research Categories */}
-      <section>
-        <h2 className="text-2xl font-bold text-center mb-8">Browse Research by Category</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <button onClick={() => handleCategorySearch("LABORATORY")}>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:bg-blue-100 transition-colors">
-              <Beaker className="h-12 w-12 text-blue-600 mb-4 mx-auto" />
-              <h3 className="text-xl font-semibold mb-2">Laboratory Research</h3>
-              <p className="text-gray-600">Discover breakthrough laboratory findings and experimental results</p>
+          {/* Quick Search Categories */}
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-gray-500 mb-3 text-center">Quick search by category:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button 
+                onClick={() => handleCategorySearch("LABORATORY")}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
+              >
+                <Beaker className="h-4 w-4 mr-2" />
+                Laboratory Research
+              </button>
+              <button 
+                onClick={() => handleCategorySearch("NEUROSCIENCE")}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-colors"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Neuroscience
+              </button>
+              <button 
+                onClick={() => handleCategorySearch("MEDICAL")}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+              >
+                <HeartPulse className="h-4 w-4 mr-2" />
+                Medical Studies
+              </button>
+              <button 
+                onClick={() => handleCategorySearch("SPACE_RESEARCH")}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-colors"
+              >
+                <Telescope className="h-4 w-4 mr-2" />
+                Space Research
+              </button>
             </div>
-          </button>
-          <button onClick={() => handleCategorySearch("NEUROSCIENCE")}>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:bg-blue-100 transition-colors">
-              <Brain className="h-12 w-12 text-purple-600 mb-4 mx-auto" />
-              <h3 className="text-xl font-semibold mb-2">Neuroscience</h3>
-              <p className="text-gray-600">Explore cutting-edge discoveries in brain research</p>
+          </div>
+
+          {/* Search Stats/Info */}
+          <div className="flex justify-center items-center gap-6 mt-6 text-sm text-gray-500">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-4 w-4" />
+              <span>Trending Research</span>
             </div>
-          </button>
-          <button onClick={() => handleCategorySearch("MEDICAL")}>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:bg-blue-100 transition-colors">
-              <HeartPulse className="h-12 w-12 text-red-600 mb-4 mx-auto" />
-              <h3 className="text-xl font-semibold mb-2">Medical Studies</h3>
-              <p className="text-gray-600">Access the latest medical research and clinical trials</p>
-            </div>
-          </button>
-          <button onClick={() => handleCategorySearch("SPACE_RESEARCH")}>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:bg-blue-100 transition-colors">
-              <Telescope className="h-12 w-12 text-indigo-600 mb-4 mx-auto" />
-              <h3 className="text-xl font-semibold mb-2">Space Research</h3>
-              <p className="text-gray-600">Discover new findings in astronomy and space science</p>
-            </div>
-          </button>
+            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+            <span>Updated Daily</span>
+            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+            <span>Peer-Reviewed Sources</span>
+          </div>
         </div>
       </section>
 
