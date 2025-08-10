@@ -1,9 +1,9 @@
-import { Beaker, BookOpen, Brain, HeartPulse, Search, Telescope, TrendingUp, User } from 'lucide-react';
+import { Beaker, BookOpen, Bookmark, Brain, HeartPulse, Search, Telescope, TrendingUp, User } from 'lucide-react';
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ResearchCardSkeleton } from '../components/Skeleton';
 import { AuthContext } from '../context/AuthContext';
-import { getAllResearches, getResearchesByCategory, getUserResearches, searchResearches } from '../services/firebase';
+import { getAllResearches, getResearchesByCategory, getSavedResearches, getUserResearches, searchResearches } from '../services/firebase';
 
 interface Research {
   id: string;
@@ -19,6 +19,7 @@ interface Research {
 const Home = () => {
   const [allResearches, setAllResearches] = useState<Research[]>([]);
   const [userResearches, setUserResearches] = useState<Research[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
   const [showUserResearches, setShowUserResearches] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,7 @@ const Home = () => {
     fetchAllResearches();
     if (user) {
       fetchUserResearches();
+      fetchSavedCount();
     }
   }, [user]);
 
@@ -59,6 +61,16 @@ const Home = () => {
       setUserResearches(researches);
     } catch (error) {
       console.error("Error fetching user researches:", error);
+    }
+  };
+
+  const fetchSavedCount = async () => {
+    if (!user) return;
+    try {
+      const savedResearches = await getSavedResearches(user.uid);
+      setSavedCount(savedResearches.length);
+    } catch (error) {
+      console.error("Error fetching saved research count:", error);
     }
   };
 
@@ -207,6 +219,15 @@ const Home = () => {
                 <User className="h-4 w-4" />
                 My Research ({userResearches.length})
               </button>
+            )}
+            {isLoggedIn && (
+              <Link
+                to="/saved-research"
+                className="px-4 py-2 rounded-lg flex items-center gap-2 bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+              >
+                <Bookmark className="h-4 w-4" />
+                Saved ({savedCount})
+              </Link>
             )}
           </div>
           {isLoggedIn && (

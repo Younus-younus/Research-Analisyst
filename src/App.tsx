@@ -9,6 +9,7 @@ import LoginFirebase from './pages/Login_Firebase';
 import Register from './pages/Register';
 import RegisterFirebase from './pages/Register_Firebase';
 import ResearchDetail from './pages/ResearchDetail';
+import SavedResearch from './pages/SavedResearch';
 import SearchResults from './pages/SearchResult';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
               <Route path='/posts/:id' element={<DisplayPosts/>}/>
               <Route path='/research/:id' element={<ResearchDetail/>}/>
               <Route path="/search-results" element={<SearchResults />} />
+              <Route path="/saved-research" element={<SavedResearch />} />
             </Routes>
           </main>
         </div>

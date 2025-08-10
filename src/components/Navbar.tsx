@@ -1,4 +1,4 @@
-import { LogOut, Microscope, User } from 'lucide-react';
+import { Bookmark, LogOut, Microscope, User } from 'lucide-react';
 import { useContext } from "react";
 import { Link } from 'react-router-dom';
 import { AuthContext } from "../context/AuthContext";
@@ -44,6 +44,15 @@ const Navbar = () => {
                             </>
                         ) : (
                             <div className="flex items-center space-x-4">
+                                {/* Saved Research Link */}
+                                <Link 
+                                    to="/saved-research" 
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors px-3 py-2 rounded-md hover:bg-blue-50"
+                                >
+                                    <Bookmark className="h-4 w-4" />
+                                    <span>Saved</span>
+                                </Link>
+                                
                                 <div className="flex items-center space-x-2">
                                     {user?.photoURL ? (
                                         <img 

@@ -2,7 +2,7 @@
 import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
-import { addDoc, collection, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { fileToBase64, uploadToCloudinary, validateFile } from '../utils/freeStorage';
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -250,4 +250,206 @@ export const searchResearches = async (searchTerm: string) => {
     throw error;
   }
 };
+
+// Comment functions
+export const addComment = async (researchId: string, content: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const docRef = await addDoc(collection(db, 'comments'), {
+      researchId,
+      content: content.trim(),
+      authorId: user.uid,
+      authorName: user.displayName || 'Anonymous',
+      authorPhoto: user.photoURL || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    return docRef.id;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCommentsByResearchId = async (researchId: string) => {
+  try {
+    // Temporary: Remove orderBy to avoid index requirement
+    // Once you create the composite index, you can add back: orderBy('createdAt', 'desc')
+    const q = query(
+      collection(db, 'comments'),
+      where('researchId', '==', researchId)
+      // orderBy('createdAt', 'desc') // Commented out until index is created
+    );
+    const querySnapshot = await getDocs(q);
+    const comments: any[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      comments.push({ id: doc.id, ...data });
+    });
+    
+    // Sort manually for now (since we can't use orderBy without index)
+    comments.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis() || 0;
+      const bTime = b.createdAt?.toMillis() || 0;
+      return bTime - aTime; // Descending order (newest first)
+    });
+    
+    return comments;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteComment = async (commentId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    // First check if the user owns this comment
+    const commentDoc = await getDoc(doc(db, 'comments', commentId));
+    if (!commentDoc.exists()) {
+      throw new Error('Comment not found');
+    }
+
+    const commentData = commentDoc.data();
+    if (commentData.authorId !== user.uid) {
+      throw new Error('You can only delete your own comments');
+    }
+
+    await deleteDoc(doc(db, 'comments', commentId));
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save/Bookmark functions
+export const saveResearch = async (userId: string, researchId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || user.uid !== userId) throw new Error('User not authenticated');
+
+    // Check if already saved to avoid duplicates
+    const existingSave = await checkIfResearchSaved(userId, researchId);
+    if (existingSave) {
+      throw new Error('Research is already saved');
+    }
+
+    const docRef = await addDoc(collection(db, 'savedResearches'), {
+      researchId,
+      userId,
+      savedAt: serverTimestamp()
+    });
+    
+    return docRef.id;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const unsaveResearch = async (userId: string, researchId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || user.uid !== userId) throw new Error('User not authenticated');
+
+    // Find the saved research document
+    const q = query(
+      collection(db, 'savedResearches'),
+      where('researchId', '==', researchId),
+      where('userId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      throw new Error('Research is not saved');
+    }
+
+    // Delete the saved research document
+    const docToDelete = querySnapshot.docs[0];
+    await deleteDoc(doc(db, 'savedResearches', docToDelete.id));
+    
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const checkIfResearchSaved = async (userId: string, researchId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || user.uid !== userId) return false;
+
+    const q = query(
+      collection(db, 'savedResearches'),
+      where('researchId', '==', researchId),
+      where('userId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking saved status:', error);
+    return false;
+  }
+};
+
+export const getSavedResearches = async (userId: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || user.uid !== userId) throw new Error('User not authenticated');
+
+    // Get saved research IDs (temporarily without ordering until Firebase index is created)
+    const q = query(
+      collection(db, 'savedResearches'),
+      where('userId', '==', userId)
+      // orderBy('savedAt', 'desc') // Commented out until Firebase composite index is created
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const savedResearchData: Array<{researchId: string, savedAt: any}> = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      savedResearchData.push({
+        researchId: data.researchId,
+        savedAt: data.savedAt
+      });
+    });
+
+    // Sort manually by savedAt (most recent first)
+    savedResearchData.sort((a, b) => {
+      if (!a.savedAt || !b.savedAt) return 0;
+      return b.savedAt.toDate() - a.savedAt.toDate();
+    });
+
+    // Extract research IDs in sorted order
+    const savedResearchIds = savedResearchData.map(item => item.researchId);
+
+    // If no saved researches, return empty array
+    if (savedResearchIds.length === 0) {
+      return [];
+    }
+
+    // Get the actual research documents
+    const researches: any[] = [];
+    for (const researchId of savedResearchIds) {
+      try {
+        const researchDoc = await getDoc(doc(db, 'researches', researchId));
+        if (researchDoc.exists()) {
+          researches.push({ id: researchDoc.id, ...researchDoc.data() });
+        }
+      } catch (error) {
+        console.error(`Error fetching research ${researchId}:`, error);
+        // Continue with other researches if one fails
+      }
+    }
+
+    return researches;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default app;
